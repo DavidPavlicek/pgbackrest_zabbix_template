@@ -1,0 +1,2164 @@
+zabbix_export:
+  version: '5.4'
+  date: '2022-02-04T09:56:49Z'
+  groups:
+    -
+      uuid: a571c0d144b14fd4a87a9d9b2aa9fcd6
+      name: Templates/Applications
+  templates:
+    -
+      uuid: 71dec6867c8e4be38669cb46e025c0a0
+      template: pgBackRest
+      name: pgBackRest
+      description: 'Zabbix template for pgBackRest'
+      groups:
+        -
+          name: Templates/Applications
+      items:
+        -
+          uuid: f6409f2c4f6a41dbb4d33b9b50f075aa
+          name: Info
+          key: pgbackrest.info
+          delay: '{$POLLING_INTERVAL}'
+          history: '{$RETENTION_INFO_JSON}'
+          trends: '0'
+          value_type: TEXT
+          description: 'Base item to retrieve data from pgBackRest host'
+          tags:
+            -
+              tag: application
+              value: pgBackRest
+            -
+              tag: data
+              value: raw
+      discovery_rules:
+        -
+          uuid: 5cd0c6e4bb5142b3a4b464f9352ec27c
+          name: 'Stanza Discovery'
+          type: DEPENDENT
+          key: pgbackrest.stanza.discovery
+          delay: '0'
+          description: 'Discovering Stanzas from pgBackRest raw info data.'
+          item_prototypes:
+            -
+              uuid: 4064a1c243c143579368153e68ceb0a0
+              name: 'Stanza {#STANZA}: Last Differential Backup JSON'
+              type: DEPENDENT
+              key: 'pgbackrest.backup_diff_last[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_DERIVED_JSON}'
+              trends: '0'
+              value_type: TEXT
+              description: 'Base item to retrieve last differential stanza backup JSON object. It also extends this object with some calculated values required in dependent items.'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.backup.[?(@.type==''diff'')]'
+                -
+                  type: JAVASCRIPT
+                  parameters:
+                    - |
+                      var data = JSON.parse(value)
+                      var out = data.sort(function(a,b){return a.timestamp.start - b.timestamp.start}).reverse()[0]
+                      out.timestamp.duration = out.timestamp.stop - out.timestamp.start
+                      return JSON.stringify(out)
+              master_item:
+                key: 'pgbackrest.stanza.raw_info[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Data
+                  value: Raw
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: 95760ea6f026406d87f7bd2ef7f0f590
+              name: 'Stanza {#STANZA}: Last Full Backup JSON'
+              type: DEPENDENT
+              key: 'pgbackrest.backup_full_last[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_DERIVED_JSON}'
+              trends: '0'
+              value_type: TEXT
+              description: 'Base item to retrieve last full stanza backup JSON object. It also extends this object with some calculated values required in dependent items.'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.backup.[?(@.type==''full'')]'
+                -
+                  type: JAVASCRIPT
+                  parameters:
+                    - |
+                      var data = JSON.parse(value)
+                      var out = data.sort(function(a,b){return a.timestamp.start - b.timestamp.start}).reverse()[0]
+                      out.timestamp.duration = out.timestamp.stop - out.timestamp.start
+                      return JSON.stringify(out)
+              master_item:
+                key: 'pgbackrest.stanza.raw_info[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Data
+                  value: Raw
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: 242ffeec4bbe446d8fe290e7e69f26f1
+              name: 'Stanza {#STANZA}: Last Incremental Backup JSON'
+              type: DEPENDENT
+              key: 'pgbackrest.backup_incr_last[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_DERIVED_JSON}'
+              trends: '0'
+              value_type: TEXT
+              description: 'Base item to retrieve last incremental stanza backup JSON object. It also extends this object with some calculated values required in dependent items.'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.backup.[?(@.type==''incr'')]'
+                  error_handler: CUSTOM_ERROR
+                  error_handler_params: 'Stanza {#STANZA} does not contain this type of backup'
+                -
+                  type: JAVASCRIPT
+                  parameters:
+                    - |
+                      var data = JSON.parse(value)
+                      var out = data.sort(function(a,b){return a.timestamp.start - b.timestamp.start}).reverse()[0]
+                      out.timestamp.duration = out.timestamp.stop - out.timestamp.start
+                      return JSON.stringify(out)
+              master_item:
+                key: 'pgbackrest.stanza.raw_info[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Data
+                  value: Raw
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: ac48bf71ad254736a3fc16d0b6261770
+              name: 'Stanza {#STANZA}: Last Backup JSON'
+              type: DEPENDENT
+              key: 'pgbackrest.backup_last[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_DERIVED_JSON}'
+              trends: '0'
+              value_type: TEXT
+              description: 'Base item to retrieve last stanza backup JSON object. It also extends this object with some calculated values required in dependent items.'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.backup
+                -
+                  type: JAVASCRIPT
+                  parameters:
+                    - |
+                      var data = JSON.parse(value)
+                      var out = data.sort(function(a,b){return a.timestamp.start - b.timestamp.start}).reverse()[0]
+                      out.timestamp.duration = out.timestamp.stop - out.timestamp.start
+                      return JSON.stringify(out)
+              master_item:
+                key: 'pgbackrest.stanza.raw_info[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Data
+                  value: Raw
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: 987a09aeb2a144df88dd567f3786dc40
+              name: 'Stanza {#STANZA}: Archive Max WAL'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.archive_max_wal[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: JAVASCRIPT
+                  parameters:
+                    - |
+                      var data = JSON.parse(value).archive;
+                      data.forEach(function(r){
+                        wal = r.max;
+                        r.timeline = parseInt(wal.substring(1,8), 16);
+                        r.file = parseInt(wal.substring(9,16), 16);
+                        r.segment = parseInt(wal.substring(17,24), 16);
+                      });
+                      data.sort(function(a,b){
+                        t = a.timeline < b.timeline ? -100 : (a.timeline > b.timeline ? 100 : 0);
+                        f = a.file < b.file ? -10 : (a.file > b.file ? 10 : 0);
+                        s = a.segment < b.segment ? -1 : (a.segment > b.segment ? 1 : 0);
+                        return t+f+s
+                      });
+                      return JSON.stringify(data.reverse()[0]);
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.max
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.stanza.raw_info[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+              trigger_prototypes:
+                -
+                  uuid: 9297dede50ff479c99b5c6dd41a6db96
+                  expression: 'nodata(/pgBackRest/pgbackrest.stanza.archive_max_wal[{#STANZA}],{$ARCHIVE_STALE_THRESHOLD})'
+                  name: 'pgBackRest Stanza {#STANZA}: No new WALs in archive for {$ARCHIVE_STALE_THRESHOLD}'
+                  priority: WARNING
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: Application
+                      value: pgBackRest
+                    -
+                      tag: Stanza
+                      value: '{#STANZA}'
+            -
+              uuid: b6697593384849539f675ec68adbbd43
+              name: 'Stanza {#STANZA}: Archive Min WAL'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.archive_min_wal[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: JAVASCRIPT
+                  parameters:
+                    - |
+                      var data = JSON.parse(value).archive;
+                      data.forEach(function(r){
+                        wal = r.min;
+                        r.timeline = parseInt(wal.substring(1,8), 16);
+                        r.file = parseInt(wal.substring(9,16), 16);
+                        r.segment = parseInt(wal.substring(17,24), 16);
+                      });
+                      data.sort(function(a,b){
+                        t = a.timeline < b.timeline ? -100 : (a.timeline > b.timeline ? 100 : 0);
+                        f = a.file < b.file ? -10 : (a.file > b.file ? 10 : 0);
+                        s = a.segment < b.segment ? -1 : (a.segment > b.segment ? 1 : 0);
+                        return t+f+s
+                      });
+                      return JSON.stringify(data[0]);
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.min
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.stanza.raw_info[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+              trigger_prototypes:
+                -
+                  uuid: dbfe73b7ad9d4b7180359e5c7aad1dc6
+                  expression: 'nodata(/pgBackRest/pgbackrest.stanza.archive_min_wal[{#STANZA}],{$ARCHIVE_EXPIRE_THRESHOLD})'
+                  name: 'pgBackRest Stanza {#STANZA}: Archived WAL files older than {$ARCHIVE_EXPIRE_THRESHOLD}'
+                  priority: WARNING
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: Application
+                      value: pgBackRest
+                    -
+                      tag: Stanza
+                      value: '{#STANZA}'
+            -
+              uuid: 0de15843aac8463bbc101fc3653e91e9
+              name: 'Stanza {#STANZA}: All Backups'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backups[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.backup.length()
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.stanza.raw_info[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: 9d7429b778964f2581c558b50963620d
+              name: 'Stanza {#STANZA}: Differential Backups'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backups_diff[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.backup.[?(@.type==''diff'')].length()'
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.stanza.raw_info[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: a476e64d3aaa406381f03572726801b1
+              name: 'Stanza {#STANZA}: Full Backups'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backups_full[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.backup.[?(@.type==''full'')].length()'
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.stanza.raw_info[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: 4e040133330a433a975dd31fb5d10ae7
+              name: 'Stanza {#STANZA}: Incremental Backups'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backups_incr[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.backup.[?(@.type==''incr'')].length()'
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.stanza.raw_info[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: 85203c5e40fa4789a7df586d97464a9f
+              name: 'Stanza {#STANZA}: Last Differential Backup Database ID'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_diff_last_db[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.database.id
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_diff_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: 5e9b0479e3e14e0493f2c12f57ab8ed5
+              name: 'Stanza {#STANZA}: Last Differential Backup Delta'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_diff_last_delta[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              units: B
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.info.delta
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_diff_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: 312609346d0b41408ee51986a1a2fc3f
+              name: 'Stanza {#STANZA}: Last Differential Backup Duration'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_diff_last_duration[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              units: s
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.timestamp.duration
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_diff_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: 41c817c3ed1140d0a7a6a04fcf6880cb
+              name: 'Stanza {#STANZA}: Last Differential Backup Error'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_diff_last_error[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.error
+                -
+                  type: BOOL_TO_DECIMAL
+                  parameters:
+                    - ''
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_diff_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+              trigger_prototypes:
+                -
+                  uuid: a535b1e75bce4578879a344be89f80ba
+                  expression: 'last(/pgBackRest/pgbackrest.stanza.backup_diff_last_error[{#STANZA}],#1) = 1'
+                  name: 'pgBackRest Stanza {#STANZA}: Last differential backup failed'
+                  priority: WARNING
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: Application
+                      value: pgBackRest
+                    -
+                      tag: Stanza
+                      value: '{#STANZA}'
+            -
+              uuid: 12691d71e90e497daa9ab19fd240c573
+              name: 'Stanza {#STANZA}: Last Differential Backup Label'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_diff_last_label[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.label
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_diff_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: aa3dad2b189e421a89c438a75f33c013
+              name: 'Stanza {#STANZA}: Last Differential Backup Repo'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_diff_last_repo[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.database.["repo-key"]'
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_diff_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: d3e831ac580e4594aedf9097ebe99950
+              name: 'Stanza {#STANZA}: Last Differential Backup Repo Delta'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_diff_last_repo_delta[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              units: B
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.info.repository.delta
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_diff_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: f139aec05cbb4393a17fbe2e64ed48a9
+              name: 'Stanza {#STANZA}: Last Differential Backup Repo Size'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_diff_last_repo_size[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              units: B
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.info.repository.size
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_diff_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: 817db0af1a7442b89a1a161109988be0
+              name: 'Stanza {#STANZA}: Last Differential Backup Size'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_diff_last_size[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              units: B
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.info.size
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_diff_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: 2eb5675d90d14976ab813c8bc18ed6fb
+              name: 'Stanza {#STANZA}: Last Differential Backup Start'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_diff_last_start[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              units: unixtime
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.timestamp.start
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_diff_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+              trigger_prototypes:
+                -
+                  uuid: b034811041104f17b9ea707c9cbe0194
+                  expression: '(now() - last(/pgBackRest/pgbackrest.stanza.backup_diff_last_start[{#STANZA}],#1)) >= {$LAST_DIFF_BACKUP_THRESHOLD}'
+                  name: 'pgBackRest Stanza {#STANZA}: Last differential backup older than {$LAST_DIFF_BACKUP_THRESHOLD}'
+                  priority: WARNING
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: Application
+                      value: pgBackRest
+                    -
+                      tag: Stanza
+                      value: '{#STANZA}'
+            -
+              uuid: 60f137266097403ab2bf785594f80c37
+              name: 'Stanza {#STANZA}: Last Differential Backup Start WAL'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_diff_last_start_wal[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.archive.start
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_diff_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: 6b2987c7bce2486185447f5e58eecb37
+              name: 'Stanza {#STANZA}: Last Differential Backup Stop'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_diff_last_stop[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              units: unixtime
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.timestamp.stop
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_diff_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: c0b388aced154d73a14c2ef78d27027f
+              name: 'Stanza {#STANZA}: Last Differential Backup Stop WAL'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_diff_last_stop_wal[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.archive.stop
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_diff_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: ac802c68e780474b952273da4b495a46
+              name: 'Stanza {#STANZA}: Last Full Backup Database ID'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_full_last_db[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.database.id
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_full_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: be9cc395831c4c81a2c825fba27527b5
+              name: 'Stanza {#STANZA}: Last Full Backup Duration'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_full_last_duration[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              units: s
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.timestamp.duration
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_full_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: c80a9de42bfe4f09a8b8d0fe57162ec6
+              name: 'Stanza {#STANZA}: Last Full Backup Error'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_full_last_error[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.error
+                -
+                  type: BOOL_TO_DECIMAL
+                  parameters:
+                    - ''
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_full_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+              trigger_prototypes:
+                -
+                  uuid: c45a964d036f4ce098f2f1937da4be95
+                  expression: 'last(/pgBackRest/pgbackrest.stanza.backup_full_last_error[{#STANZA}],#1) = 1'
+                  name: 'pgBackRest Stanza {#STANZA}: Last full backup failed'
+                  priority: WARNING
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: Application
+                      value: pgBackRest
+                    -
+                      tag: Stanza
+                      value: '{#STANZA}'
+            -
+              uuid: 3103b57f1aa84a42803ce626bc6a1f08
+              name: 'Stanza {#STANZA}: Last Full Backup Label'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_full_last_label[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.label
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_full_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: c4235780be9c4106aab421b749e8e6b8
+              name: 'Stanza {#STANZA}: Last Full Backup Repo'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_full_last_repo[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.database.["repo-key"]'
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_full_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: d804552c53834de6b5332261c326f1b4
+              name: 'Stanza {#STANZA}: Last Full Backup Repo Size'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_full_last_repo_size[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              units: B
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.info.repository.size
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_full_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: 396822198b79477b89955c14777ac798
+              name: 'Stanza {#STANZA}: Last Full Backup Size'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_full_last_size[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              units: B
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.info.size
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_full_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: ed1ed83912a142c4b5ea059d150eba6d
+              name: 'Stanza {#STANZA}: Last Full Backup Start'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_full_last_start[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              units: unixtime
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.timestamp.start
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_full_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+              trigger_prototypes:
+                -
+                  uuid: 42e57d284726491eb91e5e9e8113942b
+                  expression: '(now() - last(/pgBackRest/pgbackrest.stanza.backup_full_last_start[{#STANZA}],#1)) >= {$LAST_FULL_BACKUP_THRESHOLD}'
+                  name: 'pgBackRest Stanza {#STANZA}: Last full backup older than {$LAST_FULL_BACKUP_THRESHOLD}'
+                  priority: WARNING
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: Application
+                      value: pgBackRest
+                    -
+                      tag: Stanza
+                      value: '{#STANZA}'
+            -
+              uuid: 79e7e0e7aed34785b563fadd81470344
+              name: 'Stanza {#STANZA}: Last Full Backup Start WAL'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_full_last_start_wal[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.archive.start
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_full_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: e618c787b5e94593b0f4fc22adcc97d8
+              name: 'Stanza {#STANZA}: Last Full Backup Stop'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_full_last_stop[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              units: unixtime
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.timestamp.stop
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_full_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: 57028b3a894d4acda83928f9299b4c75
+              name: 'Stanza {#STANZA}: Last Full Backup Stop WAL'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_full_last_stop_wal[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.archive.stop
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_full_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: 3e81b1b35a6243ce9cfdf276236db765
+              name: 'Stanza {#STANZA}: Last Incremental Backup Database ID'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_incr_last_db[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.database.id
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_incr_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: d4fc6cd927b849a5aa438f789b1b0aeb
+              name: 'Stanza {#STANZA}: Last Incremental Backup Delta'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_incr_last_delta[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              units: B
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.info.delta
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_incr_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: d1b0f43c82b24be7924a67835382f42a
+              name: 'Stanza {#STANZA}: Last Incremental Backup Duration'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_incr_last_duration[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              units: s
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.timestamp.duration
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_incr_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: 443f0465c32e471da378a9c4c3c7e162
+              name: 'Stanza {#STANZA}: Last Incremental Backup Error'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_incr_last_error[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.error
+                -
+                  type: BOOL_TO_DECIMAL
+                  parameters:
+                    - ''
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_incr_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+              trigger_prototypes:
+                -
+                  uuid: 1e31a0b74f4a46eb8a69d306bc9e4c06
+                  expression: 'last(/pgBackRest/pgbackrest.stanza.backup_incr_last_error[{#STANZA}],#1) = 1'
+                  name: 'pgBackRest Stanza {#STANZA}: Last incremental backup failed'
+                  priority: WARNING
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: Application
+                      value: pgBackRest
+                    -
+                      tag: Stanza
+                      value: '{#STANZA}'
+            -
+              uuid: fda1ab95e4ac412bb4f77bbfe3275674
+              name: 'Stanza {#STANZA}: Last Incremental Backup Label'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_incr_last_label[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.label
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_incr_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: ed69d1fb7cbf49b481f5fdd4239615ad
+              name: 'Stanza {#STANZA}: Last Incremental Backup Repo'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_incr_last_repo[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.database.["repo-key"]'
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_incr_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: 3cf6d6ac80384ee6a6c14c7a01533b5a
+              name: 'Stanza {#STANZA}: Last Incremental Backup Repo Delta'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_incr_last_repo_delta[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              units: B
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.info.repository.delta
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_incr_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: 89384b6badc04ef0881590d798117bfc
+              name: 'Stanza {#STANZA}: Last Incremental Backup Repo Size'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_incr_last_repo_size[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              units: B
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.info.repository.size
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_incr_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: f2c1dff508fb49e3b95b244ef3bc3405
+              name: 'Stanza {#STANZA}: Last Incremental Backup Size'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_incr_last_size[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              units: B
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.info.size
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_incr_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: f9b7af2ee2ee4b55a76a75d8fe8da553
+              name: 'Stanza {#STANZA}: Last Incremental Backup Start'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_incr_last_start[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              units: unixtime
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.timestamp.start
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_incr_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+              trigger_prototypes:
+                -
+                  uuid: a23afd6502cc4942a0e402414f6eb0e7
+                  expression: '(now() - last(/pgBackRest/pgbackrest.stanza.backup_incr_last_start[{#STANZA}],#1)) >= {$LAST_INCR_BACKUP_THRESHOLD}'
+                  name: 'pgBackRest Stanza {#STANZA}: Last Incremental Backup older than {$LAST_INCR_BACKUP_THRESHOLD}'
+                  priority: WARNING
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: Application
+                      value: pgBackRest
+                    -
+                      tag: Stanza
+                      value: '{#STANZA}'
+            -
+              uuid: 4753bb07b70c4f7f8dd001d5cecccb7f
+              name: 'Stanza {#STANZA}: Last Incremental Backup Start WAL'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_incr_last_start_wal[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.archive.start
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_incr_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: f2574d97672b416caaf8e4f51b902f7f
+              name: 'Stanza {#STANZA}: Last Incremental Backup Stop'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_incr_last_stop[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              units: unixtime
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.timestamp.stop
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_incr_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: 53fe817cb4a0417199819bb8dee286f9
+              name: 'Stanza {#STANZA}: Last Incremental Backup Stop WAL'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_incr_last_stop_wal[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.archive.stop
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_incr_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: e11ee9dd49e843dd85e97c3064ecc7bf
+              name: 'Stanza {#STANZA}: Last Backup Database ID'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_last_db[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.database.id
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: 8299e9b933244fa1bfea779a2fd5be6b
+              name: 'Stanza {#STANZA}: Last Backup Delta'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_last_delta[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              units: B
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.info.delta
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: 1600110b0ee349139fc15df882c46a00
+              name: 'Stanza {#STANZA}: Last Backup Duration'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_last_duration[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              units: s
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.timestamp.duration
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: c23c41d96c284e52a4b1bcbf904305b5
+              name: 'Stanza {#STANZA}: Last Backup Error'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_last_error[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.error
+                -
+                  type: BOOL_TO_DECIMAL
+                  parameters:
+                    - ''
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+              trigger_prototypes:
+                -
+                  uuid: 7c5647c485b2477f88c68f9293671c13
+                  expression: 'last(/pgBackRest/pgbackrest.stanza.backup_last_error[{#STANZA}],#1) = 1'
+                  name: 'pgBackRest Stanza {#STANZA}: Last backup failed'
+                  priority: WARNING
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: Application
+                      value: pgBackRest
+                    -
+                      tag: Stanza
+                      value: '{#STANZA}'
+            -
+              uuid: 2182dd6f9f43439b8a2990d5af28649f
+              name: 'Stanza {#STANZA}: Last Backup Label'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_last_label[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.label
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: 72a6f23dbada4f5ca8ad906697976803
+              name: 'Stanza {#STANZA}: Last Backup Repo'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_last_repo[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.database.["repo-key"]'
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: 0a4f386362cc4c779627a4c642323947
+              name: 'Stanza {#STANZA}: Last Backup Repo Delta'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_last_repo_delta[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              units: B
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.info.repository.delta
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: f2963930885647eb84f8494c5e459f56
+              name: 'Stanza {#STANZA}: Last Backup Repo Size'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_last_repo_size[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              units: B
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.info.repository.size
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: 8b351ed4d05047eea30e32de73e573b4
+              name: 'Stanza {#STANZA}: Last Backup Size'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_last_size[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              units: B
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.info.size
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: 585fe0229f084c41956d16609e5fe42d
+              name: 'Stanza {#STANZA}: Last Backup Start'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_last_start[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              units: unixtime
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.timestamp.start
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+              trigger_prototypes:
+                -
+                  uuid: b728eb6cab734eebaba0a3e8201e5d8b
+                  expression: '(now() - last(/pgBackRest/pgbackrest.stanza.backup_last_start[{#STANZA}],#1)) >= {$LAST_BACKUP_THRESHOLD}'
+                  name: 'pgBackRest Stanza {#STANZA}: Last backup older than {$LAST_BACKUP_THRESHOLD}'
+                  priority: WARNING
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: Application
+                      value: pgBackRest
+                    -
+                      tag: Stanza
+                      value: '{#STANZA}'
+            -
+              uuid: c98ffffe49ca4c889ea42cedd8d85f2b
+              name: 'Stanza {#STANZA}: Last Backup Start WAL'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_last_start_wal[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.archive.start
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: 420f56e3af6c4918ad1315c41ef2b3c0
+              name: 'Stanza {#STANZA}: Last Backup Stop'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_last_stop[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              units: unixtime
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.timestamp.stop
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: d5c2731fa8544e0fa4ad64c07bff90c8
+              name: 'Stanza {#STANZA}: Last Backup Stop WAL'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_last_stop_wal[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.archive.stop
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: e89531e698184c11921f0c3304305b27
+              name: 'Stanza {#STANZA}: Last Backup Type'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.backup_last_type[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.type
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.backup_last[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: a7f78dc69cfe4bfa9675f1c4e30af56f
+              name: 'Stanza {#STANZA}: Cipher'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.cipher[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.cipher
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.stanza.raw_info[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: 11bf5ea874fc4713983b4799e577cf8d
+              name: 'Stanza {#STANZA}: Info JSON'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.raw_info[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_DERIVED_JSON}'
+              trends: '0'
+              value_type: TEXT
+              description: 'Base item containing specific stanza info JSON object'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.[?(@.name==''{#STANZA}'')].first()'
+              master_item:
+                key: pgbackrest.info
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Data
+                  value: Raw
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+            -
+              uuid: 3568261ec8a74d298cdc6c25eda2e60f
+              name: 'Stanza {#STANZA}: Status Code'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.status_code[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '{$RETENTION_TREND_ITEMS}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.status.code
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.stanza.raw_info[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+              trigger_prototypes:
+                -
+                  uuid: 9105874a13f347f98c68d56567905fe3
+                  expression: 'last(/pgBackRest/pgbackrest.stanza.status_code[{#STANZA}],#1) > 0'
+                  name: 'pgBackRest Stanza {#STANZA}: Status not OK'
+                  priority: WARNING
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: Application
+                      value: pgBackRest
+                    -
+                      tag: Stanza
+                      value: '{#STANZA}'
+            -
+              uuid: 8c1605fe11f34a31a1c6eecaa84fb0a4
+              name: 'Stanza {#STANZA}: Status Message'
+              type: DEPENDENT
+              key: 'pgbackrest.stanza.status_msg[{#STANZA}]'
+              delay: '0'
+              history: '{$RETENTION_ITEMS}'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.status.message
+                -
+                  type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'pgbackrest.stanza.raw_info[{#STANZA}]'
+              tags:
+                -
+                  tag: Application
+                  value: pgBackRest
+                -
+                  tag: Stanza
+                  value: '{#STANZA}'
+          graph_prototypes:
+            -
+              uuid: bf231722a4af48d98fa4844847153ee1
+              name: 'Stanza {#STANZA}: Backup duration'
+              graph_items:
+                -
+                  sortorder: '1'
+                  color: 1A7C11
+                  item:
+                    host: pgBackRest
+                    key: 'pgbackrest.stanza.backup_last_duration[{#STANZA}]'
+                -
+                  sortorder: '2'
+                  color: F63100
+                  item:
+                    host: pgBackRest
+                    key: 'pgbackrest.stanza.backup_diff_last_duration[{#STANZA}]'
+                -
+                  sortorder: '3'
+                  color: 2774A4
+                  item:
+                    host: pgBackRest
+                    key: 'pgbackrest.stanza.backup_full_last_duration[{#STANZA}]'
+                -
+                  sortorder: '4'
+                  color: A54F10
+                  item:
+                    host: pgBackRest
+                    key: 'pgbackrest.stanza.backup_incr_last_duration[{#STANZA}]'
+            -
+              uuid: 7c030600fc864c4387aaf479b9464cb7
+              name: 'Stanza {#STANZA}: Backup size'
+              graph_items:
+                -
+                  sortorder: '1'
+                  color: AC8C14
+                  calc_fnc: ALL
+                  item:
+                    host: pgBackRest
+                    key: 'pgbackrest.stanza.backup_last_repo_size[{#STANZA}]'
+                -
+                  sortorder: '2'
+                  color: 6C59DC
+                  calc_fnc: ALL
+                  item:
+                    host: pgBackRest
+                    key: 'pgbackrest.stanza.backup_last_repo_delta[{#STANZA}]'
+                -
+                  sortorder: '3'
+                  color: 611F27
+                  calc_fnc: ALL
+                  item:
+                    host: pgBackRest
+                    key: 'pgbackrest.stanza.backup_last_size[{#STANZA}]'
+                -
+                  sortorder: '4'
+                  color: FC6EA3
+                  calc_fnc: ALL
+                  item:
+                    host: pgBackRest
+                    key: 'pgbackrest.stanza.backup_last_delta[{#STANZA}]'
+            -
+              uuid: c2f97728caa942e5a35296fd97ec3e6c
+              name: 'Stanza {#STANZA}: Number of backups'
+              graph_items:
+                -
+                  sortorder: '1'
+                  color: FC6EA3
+                  calc_fnc: ALL
+                  item:
+                    host: pgBackRest
+                    key: 'pgbackrest.stanza.backups[{#STANZA}]'
+                -
+                  sortorder: '2'
+                  color: AC8C14
+                  calc_fnc: ALL
+                  item:
+                    host: pgBackRest
+                    key: 'pgbackrest.stanza.backups_full[{#STANZA}]'
+                -
+                  sortorder: '3'
+                  color: 6C59DC
+                  calc_fnc: ALL
+                  item:
+                    host: pgBackRest
+                    key: 'pgbackrest.stanza.backups_diff[{#STANZA}]'
+                -
+                  sortorder: '4'
+                  color: 611F27
+                  calc_fnc: ALL
+                  item:
+                    host: pgBackRest
+                    key: 'pgbackrest.stanza.backups_incr[{#STANZA}]'
+          master_item:
+            key: pgbackrest.info
+          lld_macro_paths:
+            -
+              lld_macro: '{#STANZA}'
+              path: $.name
+      macros:
+        -
+          macro: '{$ARCHIVE_EXPIRE_THRESHOLD}'
+          value: 30d
+          description: 'Check for old WALs in archive'
+        -
+          macro: '{$ARCHIVE_STALE_THRESHOLD}'
+          value: 1h
+          description: 'Max time without new WALs in archive'
+        -
+          macro: '{$LAST_BACKUP_THRESHOLD}'
+          value: 24h
+          description: 'Last backup maximum age (no matter of type)'
+        -
+          macro: '{$LAST_DIFF_BACKUP_THRESHOLD}'
+          value: 24h
+          description: 'Last differential backup maximum age'
+        -
+          macro: '{$LAST_FULL_BACKUP_THRESHOLD}'
+          value: 7d
+          description: 'Last full backup maximum age'
+        -
+          macro: '{$LAST_INCR_BACKUP_THRESHOLD}'
+          value: 24h
+          description: 'Last incremental backup maximum age'
+        -
+          macro: '{$POLLING_INTERVAL}'
+          value: 15m
+          description: 'Agent info polling interval'
+        -
+          macro: '{$RETENTION_DERIVED_JSON}'
+          value: '0'
+          description: 'Retention period for derived JSON objects'
+        -
+          macro: '{$RETENTION_INFO_JSON}'
+          value: 1d
+          description: 'Retention period for raw info JSON object'
+        -
+          macro: '{$RETENTION_ITEMS}'
+          value: 30d
+          description: 'Retention period for basic items'
+        -
+          macro: '{$RETENTION_TREND_ITEMS}'
+          value: 90d
+          description: 'Retention period for trends'
